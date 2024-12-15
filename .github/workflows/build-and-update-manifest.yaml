@@ -55,7 +55,7 @@ jobs:
           IMAGE_TAG: "v${{ github.run_number }}"  # Define a tag única para cada build
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
         run: |
-          cp .env_example.ts .env_example.ts
+          cp .env_example .env_example
           docker build -t gcr.io/$GCP_PROJECT_ID/main-service-teste:${IMAGE_TAG} -f Dockerfile.kube .
           docker push gcr.io/$GCP_PROJECT_ID/main-service-teste:${IMAGE_TAG}
           docker image rm  gcr.io/$GCP_PROJECT_ID/main-service-teste:${IMAGE_TAG}
