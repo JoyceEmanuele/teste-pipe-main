@@ -1,0 +1,12 @@
+[Unit]
+Description=DAP Main service
+
+[Service]
+User=diel
+WorkingDirectory=/home/diel/main-service
+ExecStart=/usr/bin/node /home/diel/main-service/dist/src/main.js
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

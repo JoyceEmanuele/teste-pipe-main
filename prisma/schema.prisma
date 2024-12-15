@@ -1,0 +1,239 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+// datasource db {
+//   provider = "postgresql"
+//   url      = env("DATABASE_URL")
+// }
+
+model Notification {
+  ID                      Int      @id @default(autoincrement())
+  NOTIFICATION_SUBTYPE_ID Int
+  DATE_SEND               DateTime @default(now())
+
+  NotificationEnergy        NotificationEnergy[]
+  NotificationWater         NotificationWater[]
+  NotificationSubtypes      NotificationSubtypes?       @relation(fields: [NOTIFICATION_SUBTYPE_ID], references: [ID])
+  NotificationDestinatary   NotificationDestinatary[]
+  NotificationMachineHealth NotificationMachineHealth[]
+
+  @@map("NOTIFICATIONS")
+}
+
+model NotificationEnergy {
+  ID                         Int      @id @default(autoincrement())
+  NOTIFICATION_ID            Int
+  NOTIFICATION_CONDITIONS_ID Int
+  CONSUMPTION                Float
+  UNIT_ID                    Int
+  DATE_DETECTION             DateTime
+
+  Notification                 Notification                 @relation(fields: [NOTIFICATION_ID], references: [ID])
+  NotificationEnergyConditions NotificationEnergyConditions @relation(fields: [NOTIFICATION_CONDITIONS_ID], references: [ID])
+
+  @@map("NOTIFICATIONS_ENERGY")
+}
+
+model NotificationEnergyConditions {
+  ID               Int     @id @default(autoincrement())
+  SETPOINT         Int
+  IS_GREATER       Boolean
+  IS_INSTANTANEOUS Boolean
+
+  NotificationEnergy NotificationEnergy[]
+
+  @@map("NOTIFICATIONS_ENERGY_CONDITIONS")
+}
+
+model NotificationWater {
+  ID                         Int      @id @default(autoincrement())
+  NOTIFICATION_ID            Int
+  NOTIFICATION_CONDITIONS_ID Int
+  CONSUMPTION                Float
+  UNIT_ID                    Int
+  DATE_DETECTION             DateTime
+
+  Notification                Notification                @relation(fields: [NOTIFICATION_ID], references: [ID])
+  NotificationWaterConditions NotificationWaterConditions @relation(fields: [NOTIFICATION_CONDITIONS_ID], references: [ID])
+
+  @@map("NOTIFICATIONS_WATER")
+}
+
+model NotificationWaterConditions {
+  ID               Int     @id @default(autoincrement())
+  IS_INSTANTANEOUS Boolean
+
+  NotificationWater NotificationWater[]
+
+  @@map("NOTIFICATIONS_WATER_CONDITIONS")
+}
+
+model NotificationMachineHealth {
+  ID                         Int      @id @default(autoincrement())
+  NOTIFICATION_ID            Int
+  NOTIFICATION_CONDITIONS_ID Int
+  UNIT_ID                    Int
+  MACHINE_NAME               String
+  MACHINE_ID                 Int
+  ASSET_NAME                 String
+  ASSET_ID                   Int
+  DEVICE_CODE                String
+  REPORT                     String
+  DATE_DETECTION             DateTime
+
+  Notification                        Notification                         @relation(fields: [NOTIFICATION_ID], references: [ID])
+  NotificationMachineHealthConditions NotificationMachineHealthConditions? @relation(fields: [NOTIFICATION_CONDITIONS_ID], references: [ID])
+
+  @@map("NOTIFICATIONS_MACHINE_HEALTH")
+}
+
+model NotificationMachineHealthConditions {
+  ID               Int     @id @default(autoincrement())
+  IS_INSTANTANEOUS Boolean
+  HEALTH_INDEX_ID  Int
+
+  NotificationMachineHealth        NotificationMachineHealth[]
+  NotificationMachineHealthIndexes NotificationMachineHealthIndexes? @relation(fields: [HEALTH_INDEX_ID], references: [ID])
+
+  @@map("NOTIFICATIONS_MACHINE_HEALTH_CONDITIONS")
+}
+
+model NotificationMachineHealthIndexes {
+  ID                Int    @id @default(autoincrement())
+  HEALTH_INDEX_NAME String
+
+  NotificationMachineHealthConditions NotificationMachineHealthConditions[]
+
+  @@map("NOTIFICATIONS_MACHINE_HEALTH_INDEXES")
+}
+
+model NotificationTypes {
+  ID        Int    @id @default(autoincrement())
+  TYPE_NAME String
+
+  NotificationSubtypes NotificationSubtypes[]
+
+  @@map("NOTIFICATIONS_TYPES")
+}
+
+model NotificationSubtypes {
+  ID                   Int    @id @default(autoincrement())
+  NOTIFICATION_TYPE_ID Int
+  SUBTYPE_NAME         String
+
+  NotificationTypes NotificationTypes @relation(fields: [NOTIFICATION_TYPE_ID], references: [ID])
+  Notification      Notification[]
+
+  @@map("NOTIFICATIONS_SUBTYPES")
+}
+
+model NotificationDestinatary {
+  ID              Int     @id @default(autoincrement())
+  DESTINATARY_ID  String
+  NOTIFICATION_ID Int
+  IS_VIEWED       Boolean @default(false)
+
+  Notification Notification? @relation(fields: [NOTIFICATION_ID], references: [ID])
+
+  @@unique(name: "notificationDestinataryId", [DESTINATARY_ID, NOTIFICATION_ID])
+  @@map("NOTIFICATIONS_DESTINATARY")
+}
+
+model ApiRegistry {
+  ID               Int               @id @default(autoincrement())
+  CLIENT_ID        Int
+  CLIENT_NAME      String
+  TITLE            String
+  TRIGGER_ID       String
+  IS_TEST          Boolean           @default(false)
+  IS_ACTIVE        Boolean           @default(true)
+  STATUS           Boolean           @default(true)
+  CREATED_AT       DateTime          @default(now())
+  UPDATED_AT       DateTime          @updatedAt
+
+  NOTIFY_CONDITION NotifyCondition
+  HEALTH_STATUS    HealthStatus
+  INTEGRATION_TYPE IntegrationType
+
+  ApiUnitRelations ApiUnitRelation[]
+  ActiveWorkOrders ActiveWorkOrder[]
+  @@map("API_REGISTRIES")
+}
+
+model WorkOrderStateDefinition {
+  ID          Int           @id @default(autoincrement())
+  STATE       String        @unique
+  DESCRIPTION String
+  CREATED_AT  DateTime      @default(now())
+  UPDATED_AT  DateTime      @updatedAt
+  
+  WorkOrderHist    WorkOrderHist[]
+  ActiveWorkOrders ActiveWorkOrder[]
+
+  @@map("WORK_ORDER_STATE_DEFINITIONS")
+}
+
+model WorkOrderHist {
+  ID            Int      @id @default(autoincrement())
+  STATE_ID      Int
+  DESCRIPTION   String?
+  CREATED_AT    DateTime @default(now())
+  UPDATED_AT    DateTime @updatedAt
+
+  State         WorkOrderStateDefinition @relation(fields: [STATE_ID], references: [ID])
+  ActiveWorkOrder ActiveWorkOrder?
+
+  @@map("WORK_ORDER_HIST")
+}
+
+model ActiveWorkOrder {
+  ID              Int      @id @default(autoincrement())
+  ASSET_ID        String   @unique
+  API_REGISTRY_ID Int
+  WO_HIST_ID      Int      @unique
+  STATE_ID        Int
+  CREATED_AT      DateTime @default(now())
+  UPDATED_AT      DateTime @updatedAt
+
+  ApiRegistry ApiRegistry             @relation(fields: [API_REGISTRY_ID], references: [ID])
+  State       WorkOrderStateDefinition @relation(fields: [STATE_ID], references: [ID])
+  WoHist      WorkOrderHist          @relation(fields: [WO_HIST_ID], references: [ID])
+
+  @@map("ACTIVE_WORK_ORDERS")
+}
+
+model ApiUnitRelation {
+  ID                  Int                @id @default(autoincrement())
+  API_REGISTRY_ID     Int
+  UNIT_NAME           String
+  UNIT_ID             Int
+  CREATED_AT          DateTime           @default(now())
+  UPDATED_AT          DateTime           @updatedAt
+
+  ApiRegistry         ApiRegistry        @relation(fields: [API_REGISTRY_ID], references: [ID], onDelete: Cascade)
+
+  @@map("API_UNIT_RELATIONS")
+}
+
+enum NotifyCondition {
+  HEALTH_INDEX
+}
+
+enum HealthStatus {
+  RED
+  RED_OR_ORANGE
+  NOT_GREEN
+}
+
+enum IntegrationType {
+  GOOGLE
+  CELSIUS
+}

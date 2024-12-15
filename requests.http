@@ -1,0 +1,55 @@
+@apiGatewayUrl = {{$dotenv API_GATEWAY_URL}}
+
+POST {{apiGatewayUrl}}diel-internal/auth/check-user-password HTTP/1.1
+content-type: application/json
+
+{
+    "userId": "devmaster",
+    "password": "devmaster"
+}
+
+###
+
+POST {{apiGatewayUrl}}diel-internal/auth/generate-jwt-token HTTP/1.1
+content-type: application/json
+
+{
+    "user": "devmaster"
+}
+
+###
+
+POST http://localhost:3003/mainservice/notifications/create-notification-energy
+content-type: application/json
+
+{
+    "unitId": 1,
+    "destinataryIds": ["joaoolimedeiros@gmail.com"],
+    "consumption": 6000,
+    "setpoint": 50,
+    "isGreater": true,
+    "isInstantaneous": true
+}
+
+###
+
+POST http://127.0.0.1:3003/mainservice/notifications/view-notification
+
+content-type: application/json
+
+{
+    "notificationId": 1
+}
+
+###
+
+POST http://127.0.0.1:3003/mainservice/notifications/get-notifications-feed 
+
+content-type: application/json
+
+{
+  "stateIds": ["DF"],  
+  "cityIds": ["df-brasilia"], 
+  "unitIds": [186],
+  "typeName": "Utility"  
+}
