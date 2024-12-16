@@ -41,11 +41,16 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Run Prisma Migrations
+      - name: Install expect
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y expect
+
+      - name: Run Prisma Migrate Dev
         env:
           DATABASE_URL: "mysql://develbackend:5hC589lGm1oK@127.0.0.1:3306/mainservice" # Substitua com sua string de conexão
         run: |
-          npx prisma migrate deploy
+          ./prisma-migrate-dev.expect
 
       - name: Stop Cloud SQL Proxy
         run: |

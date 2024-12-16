@@ -1,0 +1,15 @@
+#!/usr/bin/expect
+
+# Executa o comando
+spawn npx prisma migrate dev
+
+# Primeira interação: Confirma o reset do banco
+expect "Do you want to continue? All data will be lost."
+send "yes\r"
+
+# Segunda interação: Nome da nova migração
+expect "Enter a name for the new migration"
+send "newmigration\r"
+
+# Permite interação adicional, se necessário
+interact
