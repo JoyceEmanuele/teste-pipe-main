@@ -50,7 +50,7 @@ jobs:
         env:
           DATABASE_URL: "mysql://develbackend:5hC589lGm1oK@127.0.0.1:3306/mainservice" # Substitua com sua string de conexão
         run: |
-          ./prisma-migrate-dev.expect
+          ./devops/prisma-migrate-dev.expect
 
       - name: Stop Cloud SQL Proxy
         run: |
